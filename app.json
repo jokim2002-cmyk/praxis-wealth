@@ -41,12 +41,6 @@
     "experiments": {
       "typedRoutes": true
     },
-    "owner": "jokim22",
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "01b9c17d-d04c-4d0d-98cc-a1bde7450c82"
-      }
-    }
+    "owner": "jokim22"
   }
 }
