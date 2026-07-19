@@ -1,13 +1,8 @@
 ﻿import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE = process.env.EXPO_PUBLIC_BACKEND_URL || "";
-export const API = `${BASE}/api`;
-
-const LOCAL_ONLY =
-  !BASE ||
-  BASE.includes("preview.emergentagent.com") ||
-  BASE.includes("localhost") ||
-  BASE.includes("127.0.0.1");
+const BASE = "";
+export const API = "local://praxis-offline";
+const LOCAL_ONLY = true;
 
 const STORE_KEY = "praxis_local_store_v2";
 
@@ -126,23 +121,15 @@ async function writeStore(store: LocalStore) {
   await AsyncStorage.setItem(STORE_KEY, JSON.stringify(store));
 }
 
-async function remote<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, init);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`${res.status}: ${txt}`);
-  }
-  return res.json();
+async function remote<T>(_path: string, _init?: RequestInit): Promise<T> {
+  throw new Error("Remote API is disabled in Praxis Wealth offline build 1.0.3");
 }
 
-async function withFallback<T>(remoteCall: () => Promise<T>, localCall: () => Promise<T>): Promise<T> {
-  if (LOCAL_ONLY) return localCall();
-  try {
-    return await remoteCall();
-  } catch (error) {
-    console.warn("Praxis remote API unavailable; using private on-device storage.", error);
-    return localCall();
-  }
+async function withFallback<T>(
+  _remoteCall: () => Promise<T>,
+  localCall: () => Promise<T>
+): Promise<T> {
+  return localCall();
 }
 
 function categorise(description: string): string {
@@ -370,3 +357,6 @@ export type TaxCompare = { gross: number; old_regime: { tax: number; taxable: nu
 export type Goal = { id: string; name: string; target: number; saved: number; kind: string; target_date?: string | null; icon?: string; created_at: string };
 export type Bill = { id: string; name: string; amount: number; kind: string; day_of_month: number; paid_months: string[]; active: boolean; days_until_due?: number; paid_this_month?: boolean };
 export type EmergencyPlan = { avg_monthly_spend: number; months_target: number; target: number; saved: number; remaining: number; progress_pct: number; monthly_contribution: number; contribution_horizon_months: number; contribution_of_income_pct: number };
+
+
+
