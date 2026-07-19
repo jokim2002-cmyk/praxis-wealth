@@ -2,7 +2,7 @@
   "expo": {
     "name": "Praxis Wealth",
     "slug": "praxis-wealth",
-    "version": "1.0.2",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "praxiswealth",
@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.emergent.aiwealthmanager.oaa4sb",
-      "versionCode": 2
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
