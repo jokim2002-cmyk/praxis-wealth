@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -87,7 +87,7 @@ export default function Onboarding() {
 
             {step === 1 && (
               <View>
-                <Text style={styles.label}>Monthly income (â‚¹)</Text>
+                <Text style={styles.label}>Monthly income (₹)</Text>
                 <TextInput
                   testID="onboard-income-input"
                   style={styles.input}
@@ -127,7 +127,7 @@ export default function Onboarding() {
 
             {step === 2 && (
               <View>
-                <Text style={styles.label}>Bank balance (â‚¹)</Text>
+                <Text style={styles.label}>Bank balance (₹)</Text>
                 <TextInput
                   testID="onboard-bank-input"
                   style={styles.input}
@@ -138,7 +138,7 @@ export default function Onboarding() {
                   onChangeText={setBank}
                 />
                 <Text style={[styles.label, { marginTop: theme.spacing.lg }]}>
-                  Cash on hand (â‚¹)
+                  Cash on hand (₹)
                 </Text>
                 <TextInput
                   testID="onboard-cash-input"
@@ -161,10 +161,10 @@ export default function Onboarding() {
                 </Text>
                 <View style={styles.summary}>
                   <Row k="Name" v={name || "You"} />
-                  <Row k="Monthly income" v={`â‚¹${income || 0}`} />
+                  <Row k="Monthly income" v={`₹${income || 0}`} />
                   <Row k="Income type" v={incomeType} />
-                  <Row k="Bank" v={`â‚¹${bank || 0}`} />
-                  <Row k="Cash" v={`â‚¹${cash || 0}`} />
+                  <Row k="Bank" v={`₹${bank || 0}`} />
+                  <Row k="Cash" v={`₹${cash || 0}`} />
                 </View>
               </View>
             )}
@@ -198,7 +198,7 @@ export default function Onboarding() {
                 style={[styles.primaryBtn, saving && { opacity: 0.6 }]}
               >
                 <Text style={styles.primaryBtnText}>
-                  {saving ? "Openingâ€¦" : "Open my ledger"}
+                  {saving ? "Opening…" : "Open my ledger"}
                 </Text>
                 <Feather name="check" size={16} color="#FFFFFF" />
               </Pressable>
