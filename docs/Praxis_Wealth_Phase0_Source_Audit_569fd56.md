@@ -1,11 +1,11 @@
-# Praxis Wealth — Phase 0 Source Audit and Freeze Plan
+﻿# Praxis Wealth â€” Phase 0 Source Audit and Freeze Plan
 
-**Audit target:** Laptop source archive `Praxis_Wealth_Laptop_Source_569fd56.zip`  
-**Expected Git checkpoint:** `569fd5632a1296965aa1e7f828e68ebbf601cd71`  
-**Protected rollback tag:** `praxis-v1.0.3-stable-offline`  
-**Protected rollback commit:** `bd92445cd7b2f8f613604ba3e1fe37cfb004179e`  
-**Archive SHA-256:** `7c3521625a71a13649d3bfb51e2c5c7e7b234a9a9b4689c86d67203341520b52`  
-**Archive integrity:** PASS — ZIP test completed without errors  
+**Audit target:** Laptop source archive `Praxis_Wealth_Laptop_Source_569fd56.zip`
+**Expected Git checkpoint:** `569fd5632a1296965aa1e7f828e68ebbf601cd71`
+**Protected rollback tag:** `praxis-v1.0.3-stable-offline`
+**Protected rollback commit:** `bd92445cd7b2f8f613604ba3e1fe37cfb004179e`
+**Archive SHA-256:** `7c3521625a71a13649d3bfb51e2c5c7e7b234a9a9b4689c86d67203341520b52`
+**Archive integrity:** PASS â€” ZIP test completed without errors
 **Files audited:** 57
 
 ## 1. Executive conclusion
@@ -38,36 +38,36 @@ The app uses Expo Router with a root stack and five bottom tabs.
 
 ### Root routes
 
-1. `app/index.tsx` — reads onboarding flag and redirects.
-2. `app/onboarding.tsx` — four-step local setup.
-3. `app/(tabs)` — main app shell.
+1. `app/index.tsx` â€” reads onboarding flag and redirects.
+2. `app/onboarding.tsx` â€” four-step local setup.
+3. `app/(tabs)` â€” main app shell.
 
 ### Tabs
 
-1. **Ledger** — `dashboard.tsx`
+1. **Ledger** â€” `dashboard.tsx`
    - net worth;
    - safe-to-spend;
    - current-month spend;
    - health score;
-   - local deterministic “Ask CA” insight;
+   - local deterministic â€œAsk CAâ€ insight;
    - liquidity values;
    - category spend.
-2. **Entries** — `expenses.tsx`
+2. **Entries** â€” `expenses.tsx`
    - add expense or income;
    - local keyword categorisation;
    - category filtering;
    - transaction deletion with confirmation.
-3. **Plan** — `plan.tsx`
+3. **Plan** â€” `plan.tsx`
    - goals;
    - recurring bills;
    - emergency-fund planning;
    - contributions and deletion.
-4. **Tax** — `tax.tsx`
+4. **Tax** â€” `tax.tsx`
    - simplified old/new regime comparison;
    - 80C usage;
    - advance-tax date/amount;
    - capital-gains placeholders.
-5. **CA** — `ca.tsx`
+5. **CA** â€” `ca.tsx`
    - stored local chat history;
    - keyword-based deterministic replies;
    - no online AI backend.
@@ -86,12 +86,12 @@ Current shape:
 
 ```text
 LocalStore
-├── profile
-├── budgets
-├── transactions[]
-├── goals[]
-├── bills[]
-└── chats{sessionId: messages[]}
+â”œâ”€â”€ profile
+â”œâ”€â”€ budgets
+â”œâ”€â”€ transactions[]
+â”œâ”€â”€ goals[]
+â”œâ”€â”€ bills[]
+â””â”€â”€ chats{sessionId: messages[]}
 ```
 
 ### Separate onboarding flag
@@ -227,7 +227,7 @@ Storage, schema repair, financial calculations, tax logic, AI simulation and ser
 ### Current safe-to-spend
 
 ```text
-monthly income + income entries − current-month expenses
+monthly income + income entries âˆ’ current-month expenses
 ```
 
 The result is clamped to zero.
@@ -261,7 +261,7 @@ Marking a bill paid creates an expense transaction. Marking it unpaid removes on
 
 ### Tax logic limitations
 
-- annual income uses only `monthly_income × 12`;
+- annual income uses only `monthly_income Ã— 12`;
 - income transaction entries are ignored;
 - slabs/rebates are hardcoded and have no fiscal-year configuration;
 - UI explicitly labels the logic FY 2024-25;
@@ -272,12 +272,12 @@ Marking a bill paid creates an expense transaction. Marking it unpaid removes on
 
 ### Confirmed source defects
 
-1. `app/onboarding.tsx` contains mojibake strings such as `â‚¹` and `Openingâ€¦` instead of `₹` and `Opening…`.
+1. `app/onboarding.tsx` contains mojibake strings such as `Ã¢â€šÂ¹` and `OpeningÃ¢â‚¬Â¦` instead of `â‚¹` and `Openingâ€¦`.
 2. CA chat uses no Android keyboard avoidance (`behavior` is undefined on Android), matching the roadmap keyboard-overlap gap.
 3. `LogBox.ignoreAllLogs(true)` suppresses all React Native warnings, reducing observability.
 4. Goal and bill deletion have no confirmation dialog; transaction deletion does.
 5. Goal/bill/emergency actions have limited error handling.
-6. The CA screen describes itself as a personal CA even though it is currently a local keyword assistant; final positioning must remain “AI CA Assistant,” not a licensed CA.
+6. The CA screen describes itself as a personal CA even though it is currently a local keyword assistant; final positioning must remain â€œAI CA Assistant,â€ not a licensed CA.
 7. The README remains default Expo boilerplate and does not document Praxis setup, architecture, rollback or validation.
 
 ### Positive findings
@@ -348,7 +348,7 @@ The remaining work should be done as one controlled Phase 0 bunch, without start
 
 ### Source changes
 
-1. Repair only the onboarding encoding strings (`₹`, `…`).
+1. Repair only the onboarding encoding strings (`â‚¹`, `â€¦`).
 2. Remove the three loose pre-404 backup files from master after confirming the protected stable tag and external bundle remain available.
 3. Add a Praxis-specific README section or replace the boilerplate README with baseline setup, architecture, validation and rollback instructions.
 4. Add this source-audit report to `docs/`.
