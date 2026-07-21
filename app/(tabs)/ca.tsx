@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,8 @@ import {
   FlatList,
   Pressable,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -30,7 +29,25 @@ export default function CAScreen() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const listRef = useRef<FlatList<Msg>>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", (e) => {
+      // Take 70% of keyboard height to reduce gap
+      setKeyboardHeight(e.endCoordinates.height * 0.7);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -65,13 +82,11 @@ export default function CAScreen() {
     }
   };
 
+  const bottomPadding = keyboardHeight > 0 ? keyboardHeight + 10 : 0;
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={90}
-      >
+      <View style={{ flex: 1 }}>
         <View style={styles.header}>
           <View>
             <Text style={styles.eyebrow}>PRAXIS · PERSONAL CA</Text>
@@ -83,7 +98,7 @@ export default function CAScreen() {
         </View>
 
         {messages.length === 0 ? (
-          <View style={styles.empty}>
+          <View style={[styles.empty, { marginBottom: bottomPadding }]}>
             <Text style={[styles.emptyTitle, serif]}>How may I assist you today?</Text>
             <Text style={styles.emptyBody}>
               I have your monthly ledger in front of me. Ask me anything — tax, savings, cash,
@@ -108,7 +123,7 @@ export default function CAScreen() {
             ref={listRef}
             data={messages}
             keyExtractor={(_, i) => `m-${i}`}
-            contentContainerStyle={styles.list}
+            contentContainerStyle={[styles.list, { paddingBottom: bottomPadding + 60 }]}
             renderItem={({ item }) => (
               <View
                 style={[
@@ -135,14 +150,15 @@ export default function CAScreen() {
         )}
 
         {sending && (
-          <View style={styles.thinking}>
+          <View style={[styles.thinking, { marginBottom: bottomPadding }]}>
             <ActivityIndicator size="small" color={theme.color.brand} />
             <Text style={styles.thinkingText}>CA is reviewing your ledger…</Text>
           </View>
         )}
 
-        <View style={styles.composer}>
+        <View style={[styles.composer, { marginBottom: bottomPadding }]}>
           <TextInput
+            ref={inputRef}
             testID="ca-input"
             value={text}
             onChangeText={setText}
@@ -150,6 +166,8 @@ export default function CAScreen() {
             placeholderTextColor={theme.color.muted}
             style={styles.composerInput}
             multiline
+            returnKeyType="send"
+            onSubmitEditing={() => send()}
           />
           <Pressable
             testID="ca-send"
@@ -160,7 +178,7 @@ export default function CAScreen() {
             <Feather name="arrow-up" size={16} color="#FFFFFF" />
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -176,6 +194,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.color.divider,
+    backgroundColor: theme.color.surface,
   },
   eyebrow: { color: theme.color.brand, letterSpacing: 3, fontSize: 10, fontWeight: "700" },
   h1: { fontSize: 26, color: theme.color.onSurface, marginTop: 2 },
@@ -237,6 +256,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.color.surface,
   },
   thinkingText: { fontSize: 12, color: theme.color.muted, fontStyle: "italic" },
   composer: {

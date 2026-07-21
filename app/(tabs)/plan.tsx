@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+﻿import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -14,15 +14,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { theme } from "@/src/utils/theme";
 import { api, formatINR, Goal, Bill, EmergencyPlan } from "@/src/utils/api";
 import { serif, serifBold } from "@/src/utils/fonts";
 
-type Section = "goals" | "bills" | "emergency";
+type Section = "goals" | "bills" | "emergency" | "language";
 
 export default function PlanScreen() {
+  const router = useRouter();
   const [section, setSection] = useState<Section>("goals");
   const [goals, setGoals] = useState<Goal[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
@@ -163,7 +164,7 @@ export default function PlanScreen() {
           <Text style={styles.eyebrow}>THE PLAN</Text>
           <Text style={[styles.h1, serif]}>Look ahead.</Text>
         </View>
-        {section !== "emergency" && (
+        {section !== "emergency" && section !== "language" && (
           <Pressable
             testID={section === "goals" ? "add-goal-fab" : "add-bill-fab"}
             style={styles.fab}
@@ -181,7 +182,7 @@ export default function PlanScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.segmentedRow}
         >
-          {(["goals", "bills", "emergency"] as const).map((s) => (
+          {(["goals", "bills", "emergency", "language"] as const).map((s) => (
             <Pressable
               key={s}
               testID={`plan-tab-${s}`}
@@ -194,7 +195,7 @@ export default function PlanScreen() {
                   section === s && styles.segChipTextActive,
                 ]}
               >
-                {s === "emergency" ? "Emergency Fund" : s === "bills" ? "Bills & Subs" : "Goals"}
+                {s === "emergency" ? "Emergency Fund" : s === "bills" ? "Bills & Subs" : s === "language" ? "Language" : "Goals"}
               </Text>
             </Pressable>
           ))}
@@ -218,6 +219,21 @@ export default function PlanScreen() {
               setContribAmt={setEfContribAmt}
               onContribute={contributeEF}
             />
+          )}
+          {section === "language" && (
+            <View style={styles.languageContainer}>
+              <Feather name="globe" size={48} color={theme.color.brand} />
+              <Text style={styles.languageTitle}>Choose your language</Text>
+              <Text style={styles.languageDesc}>
+                Tap below to open language settings
+              </Text>
+              <Pressable
+                onPress={() => router.push("/language")}
+                style={styles.languageBtn}
+              >
+                <Text style={styles.languageBtnText}>Open Language Settings</Text>
+              </Pressable>
+            </View>
           )}
         </ScrollView>
       )}
@@ -737,8 +753,37 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: 260,
   },
-
-  // Goals
+  languageContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  languageTitle: {
+    fontSize: 18,
+    color: theme.color.onSurface,
+    marginTop: 20,
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  languageDesc: {
+    fontSize: 13,
+    color: theme.color.muted,
+    marginTop: 8,
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  languageBtn: {
+    backgroundColor: theme.color.brand,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 4,
+  },
+  languageBtnText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
   goalCard: {
     backgroundColor: theme.color.surfaceSecondary,
     borderWidth: StyleSheet.hairlineWidth,
@@ -771,8 +816,6 @@ const styles = StyleSheet.create({
   goalSaved: { fontSize: 26, color: theme.color.onSurface },
   goalTarget: { fontSize: 14, color: theme.color.muted },
   goalFoot: { fontSize: 11, color: theme.color.muted, marginTop: 8 },
-
-  // Bills
   summaryCard: {
     backgroundColor: theme.color.surfaceSecondary,
     borderWidth: StyleSheet.hairlineWidth,
@@ -803,8 +846,6 @@ const styles = StyleSheet.create({
   },
   payBtnActive: { backgroundColor: theme.color.success, borderColor: theme.color.success },
   trashBtn: { padding: 4 },
-
-  // Emergency
   efCard: {
     backgroundColor: theme.color.surfaceSecondary,
     borderWidth: StyleSheet.hairlineWidth,
@@ -855,8 +896,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
-  // Modal
   modalBackdrop: { flex: 1, justifyContent: "flex-end" },
   modalCenter: { flex: 1, justifyContent: "center", padding: theme.spacing.xl },
   centerSheet: {

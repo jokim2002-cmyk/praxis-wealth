@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+﻿import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { theme } from "@/src/utils/theme";
 import { api, formatINR, DashboardData } from "@/src/utils/api";
 import { serif, serifBold } from "@/src/utils/fonts";
+import { SyncIndicator } from "@/src/components/SyncIndicator";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -79,22 +80,29 @@ export default function DashboardScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         testID="dashboard-scroll"
       >
-        {/* Header */}
-        <Text style={styles.eyebrow}>
-          PRAXIS ·{" "}
-          {new Date(`${data.month}-01T00:00:00Z`)
-            .toLocaleDateString("en-IN", { month: "short", year: "numeric" })
-            .toUpperCase()}
-        </Text>
-        <Text style={[styles.hello, serif]}>Good day, {data.profile.name || "you"}.</Text>
+        {/* Header with Sync Indicator */}
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.eyebrow}>
+              PRAXIS ·{" "}
+              {new Date(`${data.month}-01T00:00:00Z`)
+                .toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+                .toUpperCase()}
+            </Text>
+            <Text style={[styles.hello, serif]}>Good day, {data.profile.name || "you"}.</Text>
+          </View>
+          <SyncIndicator />
+        </View>
 
-        {/* Net Worth */}
+        {/* Net Worth Card - UPDATED with Smart Fields */}
         <View style={styles.netCard}>
           <Text style={styles.miniLabel}>NET WORTH</Text>
           <Text style={[styles.netValue, serifBold]} testID="net-worth-value">
             {formatINR(data.net_worth)}
           </Text>
           <View style={styles.hairline} />
+          
+          {/* Smart Spending Row */}
           <View style={styles.splitRow}>
             <View style={styles.split}>
               <Text style={styles.miniLabel}>SAFE TO SPEND</Text>
@@ -104,8 +112,29 @@ export default function DashboardScreen() {
             </View>
             <View style={styles.vertRule} />
             <View style={styles.split}>
-              <Text style={styles.miniLabel}>THIS MONTH</Text>
-              <Text style={[styles.splitValue, serif]}>{formatINR(data.total_spent)}</Text>
+              <Text style={styles.miniLabel}>DAILY SAFE SPEND</Text>
+              <Text style={[styles.splitValue, serif, { color: theme.color.brand }]}>
+                {formatINR(data.daily_safe_spend)}
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.hairline} />
+          
+          {/* Budget Breakdown Row */}
+          <View style={styles.splitRow}>
+            <View style={styles.split}>
+              <Text style={styles.miniLabel}>FIXED BILLS</Text>
+              <Text style={[styles.splitValue, serif, { color: theme.color.warning }]}>
+                {formatINR(data.fixed_bills)}
+              </Text>
+            </View>
+            <View style={styles.vertRule} />
+            <View style={styles.split}>
+              <Text style={styles.miniLabel}>SAVINGS TARGET</Text>
+              <Text style={[styles.splitValue, serif, { color: theme.color.success }]}>
+                {formatINR(data.savings_target)}
+              </Text>
             </View>
           </View>
         </View>
@@ -239,13 +268,19 @@ const styles = StyleSheet.create({
   content: { padding: theme.spacing.xl, paddingBottom: 40 },
   loading: { flex: 1, alignItems: "center", justifyContent: "center" },
   loadingText: { marginTop: 12, color: theme.color.muted, letterSpacing: 1 },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
   eyebrow: {
     color: theme.color.brand,
     letterSpacing: 3,
     fontSize: 11,
     fontWeight: "700",
   },
-  hello: { fontSize: 28, color: theme.color.onSurface, marginTop: 4, marginBottom: 20 },
+  hello: { fontSize: 28, color: theme.color.onSurface, marginTop: 4 },
   netCard: {
     backgroundColor: theme.color.surfaceSecondary,
     borderWidth: StyleSheet.hairlineWidth,

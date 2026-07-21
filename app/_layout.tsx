@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+﻿import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { LogBox } from "react-native";
@@ -7,6 +7,9 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import { useIconFonts } from "@/src/hooks/use-icon-fonts";
+import { runMigration } from "@/src/database/migration";
+import { resetMigrationFlag } from "@/src/database/reset";
+import { LanguageProvider } from "@/src/context/LanguageContext";
 
 LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync();
@@ -16,6 +19,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded || error) {
+      (async () => {
+        await resetMigrationFlag();
+        const success = await runMigration();
+        console.log('[App] Migration result:', success);
+      })();
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
@@ -23,15 +31,19 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F7F6F2" } }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <LanguageProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#F7F6F2" } }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="auth/login" />
+            <Stack.Screen name="auth/signup" />
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </LanguageProvider>
   );
 }
