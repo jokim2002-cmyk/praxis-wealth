@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState, memo } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,13 @@ import {
   FlatList,
   Pressable,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
   Modal,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -22,7 +22,7 @@ import { api } from "@/src/utils/api";
 import { serif } from "@/src/utils/fonts";
 import { requestMicrophonePermission, speakText } from "@/src/services/voice";
 
-type Msg = { role: "user" | "assistant"; content: string; timestamp?: string };
+type Msg = { role: "user" | "assistant"; content: string; timestamp?: string; id?: string };
 
 const PROMPTS = [
   "Can I afford ₹50,000 for a holiday this quarter?",
@@ -31,8 +31,40 @@ const PROMPTS = [
   "Should I keep more cash in hand or in the bank?",
 ];
 
+// Welcome message
+const WELCOME_MSG: Msg = {
+  role: "assistant",
+  content: "Hello! I'm your Personal CA. I have your monthly ledger in front of me. Ask me anything — tax, savings, cash, investing.",
+  id: "welcome-msg",
+};
+
+const Bubble = memo(({ item }: { item: Msg }) => (
+  <View
+    style={[
+      styles.bubble,
+      item.role === "user" ? styles.userBubble : styles.aiBubble,
+    ]}
+    testID={`msg-${item.role}`}
+  >
+    {item.role === "assistant" && (
+      <Text style={styles.aiTag}>PRAXIS CA</Text>
+    )}
+    <Text
+      style={[
+        styles.bubbleText,
+        item.role === "user" && { color: "#FFFFFF" },
+      ]}
+    >
+      {item.content}
+    </Text>
+  </View>
+));
+
+let messageCounter = 0;
+const generateId = () => `msg-${Date.now()}-${messageCounter++}`;
+
 export default function CAScreen() {
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const [messages, setMessages] = useState<Msg[]>([WELCOME_MSG]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -46,7 +78,7 @@ export default function CAScreen() {
   useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", (e) => {
       setKeyboardHeight(e.endCoordinates.height);
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 50);
     });
     const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
       setKeyboardHeight(0);
@@ -64,42 +96,33 @@ export default function CAScreen() {
     }
   }, [voiceModalVisible]);
 
-  const loadHistory = useCallback(async () => {
-    try {
-      const h = await api.chatHistory();
-      setMessages(h.messages as Msg[]);
-    } catch (e) {
-      console.warn(e);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
-
-  const send = async (content?: string) => {
+  const send = useCallback(async (content?: string) => {
     const msg = (content ?? text).trim();
     if (!msg || sending) return;
     setText("");
-    setMessages((prev) => [...prev, { role: "user", content: msg }]);
+    const userMsg: Msg = { role: "user", content: msg, id: generateId() };
+    setMessages((prev) => [...prev, userMsg]);
     setSending(true);
     try {
       const r = await api.aiChat(msg);
       const reply = r.reply;
-      setMessages((prev) => [...prev, { role: "assistant", content: reply, timestamp: r.timestamp }]);
+      const aiMsg: Msg = { role: "assistant", content: reply, timestamp: r.timestamp, id: generateId() };
+      setMessages((prev) => [...prev, aiMsg]);
       await speakText(reply, "en");
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 50);
     } catch (e: any) {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: `I couldn't reach the ledger just now. ${e?.message ?? ""}` },
-      ]);
+      const errMsg: Msg = {
+        role: "assistant",
+        content: `I couldn't reach the ledger just now. ${e?.message ?? ""}`,
+        id: generateId(),
+      };
+      setMessages((prev) => [...prev, errMsg]);
     } finally {
       setSending(false);
     }
-  };
+  }, [text, sending]);
 
-  const handleVoice = async () => {
+  const handleVoice = useCallback(async () => {
     const hasPermission = await requestMicrophonePermission();
     if (!hasPermission) {
       Alert.alert("Permission needed", "Please allow microphone access to use voice.");
@@ -107,17 +130,22 @@ export default function CAScreen() {
     }
     setVoiceText("");
     setVoiceModalVisible(true);
-  };
+  }, []);
 
-  const sendVoiceInput = () => {
+  const sendVoiceInput = useCallback(() => {
     const msg = voiceText.trim();
     if (!msg) return;
     setVoiceModalVisible(false);
     setText(msg);
     setTimeout(() => send(msg), 300);
-  };
+  }, [voiceText, send]);
 
-  // SMART: Use 80% of keyboard height (works for all keyboards)
+  const renderItem = useCallback(({ item }: { item: Msg }) => {
+    return <Bubble item={item} />;
+  }, []);
+
+  const keyExtractor = useCallback((item: Msg) => item.id || generateId(), []);
+
   const composerBottom = keyboardHeight > 0 ? keyboardHeight * 0.8 : 0;
 
   return (
@@ -134,57 +162,36 @@ export default function CAScreen() {
             </View>
           </View>
 
-          {messages.length === 0 ? (
-            <View style={[styles.empty, { paddingBottom: keyboardHeight > 0 ? keyboardHeight * 0.8 + 20 : 40 }]}>
-              <Text style={[styles.emptyTitle, serif]}>How may I assist you today?</Text>
-              <Text style={styles.emptyBody}>
-                I have your monthly ledger in front of me. Ask me anything — tax, savings, cash,
-                investing. Use the mic button for voice input.
-              </Text>
-              <View style={styles.promptsCol}>
-                {PROMPTS.map((p) => (
-                  <Pressable
-                    key={p}
-                    onPress={() => send(p)}
-                    style={styles.promptBtn}
-                    testID={`prompt-${p.slice(0, 10)}`}
-                  >
-                    <Feather name="corner-down-right" size={12} color={theme.color.brand} />
-                    <Text style={styles.promptText}>{p}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          ) : (
-            <FlatList
-              ref={listRef}
-              data={messages}
-              keyExtractor={(_, i) => `m-${i}`}
-              contentContainerStyle={[styles.list, { paddingBottom: keyboardHeight > 0 ? keyboardHeight * 0.8 + 20 : 40 }]}
-              renderItem={({ item }) => (
-                <View
-                  style={[
-                    styles.bubble,
-                    item.role === "user" ? styles.userBubble : styles.aiBubble,
-                  ]}
-                  testID={`msg-${item.role}`}
-                >
-                  {item.role === "assistant" && (
-                    <Text style={styles.aiTag}>PRAXIS CA</Text>
-                  )}
-                  <Text
-                    style={[
-                      styles.bubbleText,
-                      item.role === "user" && { color: "#FFFFFF" },
-                    ]}
-                  >
-                    {item.content}
-                  </Text>
+          <FlatList
+            ref={listRef}
+            data={messages}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            contentContainerStyle={[styles.list, { paddingBottom: keyboardHeight > 0 ? keyboardHeight * 0.8 + 20 : 40 }]}
+            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            removeClippedSubviews={true}
+            initialNumToRender={8}
+            updateCellsBatchingPeriod={30}
+            ListFooterComponent={
+              messages.length === 1 ? (
+                <View style={styles.promptsWrapper}>
+                  {PROMPTS.map((p) => (
+                    <Pressable
+                      key={p}
+                      onPress={() => send(p)}
+                      style={styles.promptBtn}
+                      testID={`prompt-${p.slice(0, 10)}`}
+                    >
+                      <Feather name="corner-down-right" size={12} color={theme.color.brand} />
+                      <Text style={styles.promptText}>{p}</Text>
+                    </Pressable>
+                  ))}
                 </View>
-              )}
-              onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-            />
-          )}
+              ) : null
+            }
+          />
 
           {sending && (
             <View style={styles.thinking}>
@@ -311,19 +318,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 999,
   },
-  empty: { flex: 1, padding: theme.spacing.xl, justifyContent: "center" },
-  emptyTitle: {
-    fontSize: 24,
-    color: theme.color.onSurface,
-    marginBottom: theme.spacing.md,
+  list: { padding: theme.spacing.xl, gap: theme.spacing.md },
+  promptsWrapper: {
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md,
   },
-  emptyBody: {
-    fontSize: 13,
-    color: theme.color.muted,
-    lineHeight: 20,
-    marginBottom: theme.spacing.xl,
-  },
-  promptsCol: { gap: theme.spacing.sm },
   promptBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -334,7 +333,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.surfaceSecondary,
   },
   promptText: { flex: 1, fontSize: 13, color: theme.color.onSurface },
-  list: { padding: theme.spacing.xl, gap: theme.spacing.md },
   bubble: {
     padding: theme.spacing.lg,
     maxWidth: "88%",
