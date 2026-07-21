@@ -1,8 +1,9 @@
 ﻿import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 import { theme } from "@/src/utils/theme";
 import { serif } from "@/src/utils/fonts";
@@ -16,6 +17,7 @@ const languages = [
 const STORAGE_KEY = "praxis_language";
 
 export default function LanguageScreen() {
+  const router = useRouter();
   const [selected, setSelected] = useState("en");
 
   useEffect(() => {
@@ -36,15 +38,28 @@ export default function LanguageScreen() {
   const selectLanguage = async (code: string) => {
     setSelected(code);
     await AsyncStorage.setItem(STORAGE_KEY, code);
+    
     // Show confirmation
+    const lang = languages.find(l => l.code === code);
+    Alert.alert(
+      "Language Saved",
+      `Language changed to ${lang?.label}. App will use this language.`,
+      [
+        { text: "OK", onPress: () => router.back() }
+      ]
+    );
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Feather name="arrow-left" size={24} color={theme.color.onSurface} />
+        </Pressable>
+        
         <Text style={styles.eyebrow}>PRAXIS · SETTINGS</Text>
         <Text style={[styles.h1, serif]}>Choose your language.</Text>
-        <Text style={styles.sub}>App language will change.</Text>
+        <Text style={styles.sub}>Select your preferred language</Text>
 
         <View style={styles.card}>
           {languages.map((lang) => (
@@ -66,7 +81,7 @@ export default function LanguageScreen() {
                 </Text>
               </View>
               {selected === lang.code && (
-                <Feather name="check" size={20} color={theme.color.brand} />
+                <Feather name="check-circle" size={24} color={theme.color.success} />
               )}
             </Pressable>
           ))}
@@ -75,7 +90,7 @@ export default function LanguageScreen() {
         <View style={styles.infoBox}>
           <Feather name="info" size={16} color={theme.color.brand} />
           <Text style={styles.infoText}>
-            Language will be saved. App restart not needed.
+            Selected language will be saved. UI translation will be added in the next update.
           </Text>
         </View>
       </ScrollView>
@@ -86,6 +101,7 @@ export default function LanguageScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: theme.color.surface },
   content: { padding: theme.spacing.xl, paddingBottom: 40 },
+  backBtn: { marginBottom: theme.spacing.md },
   eyebrow: {
     color: theme.color.brand,
     letterSpacing: 3,
@@ -135,10 +151,12 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: theme.spacing.lg,
     backgroundColor: theme.color.brandTertiary,
+    borderRadius: 4,
   },
   infoText: {
     flex: 1,
     fontSize: 12,
     color: theme.color.onBrandTertiary,
+    lineHeight: 18,
   },
 });
