@@ -19,6 +19,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { theme } from "@/src/utils/theme";
 import { api, formatINR, Goal, Bill, EmergencyPlan } from "@/src/utils/api";
 import { serif, serifBold } from "@/src/utils/fonts";
+import { LanguageSwitcher } from "@/src/components/LanguageSwitcher";
 
 type Section = "goals" | "bills" | "emergency" | "language";
 
@@ -30,7 +31,6 @@ export default function PlanScreen() {
   const [plan, setPlan] = useState<EmergencyPlan | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Add sheets
   const [goalModal, setGoalModal] = useState(false);
   const [gName, setGName] = useState("");
   const [gTarget, setGTarget] = useState("");
@@ -45,8 +45,6 @@ export default function PlanScreen() {
   const [bDay, setBDay] = useState("1");
 
   const [efContribAmt, setEfContribAmt] = useState("");
-
-  // Goal contribution modal
   const [contribModal, setContribModal] = useState<Goal | null>(null);
   const [contribAmt, setContribAmt] = useState("");
 
@@ -175,7 +173,6 @@ export default function PlanScreen() {
         )}
       </View>
 
-      {/* Segmented control */}
       <View style={styles.segmentedWrap}>
         <ScrollView
           horizontal
@@ -227,18 +224,23 @@ export default function PlanScreen() {
               <Text style={styles.languageDesc}>
                 Tap below to open language settings
               </Text>
-              <Pressable
-                onPress={() => router.push("/language")}
-                style={styles.languageBtn}
-              >
-                <Text style={styles.languageBtnText}>Open Language Settings</Text>
-              </Pressable>
+              <LanguageSwitcher />
             </View>
           )}
+
+          {/* Privacy Button - Always at bottom */}
+          <Pressable
+            onPress={() => router.push("/privacy")}
+            style={styles.privacyBtn}
+          >
+            <Feather name="shield" size={20} color={theme.color.brand} />
+            <Text style={styles.privacyBtnText}>Privacy Center</Text>
+            <Feather name="chevron-right" size={16} color={theme.color.muted} style={{ marginLeft: "auto" }} />
+          </Pressable>
         </ScrollView>
       )}
 
-      {/* Goal Modal */}
+      {/* Modals */}
       <Modal visible={goalModal} animationType="slide" transparent onRequestClose={() => setGoalModal(false)}>
         <KeyboardAvoidingView
           style={styles.modalBackdrop}
@@ -318,7 +320,6 @@ export default function PlanScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Bill Modal */}
       <Modal visible={billModal} animationType="slide" transparent onRequestClose={() => setBillModal(false)}>
         <KeyboardAvoidingView
           style={styles.modalBackdrop}
@@ -397,7 +398,7 @@ export default function PlanScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
-      {/* Goal Contribution Modal */}
+
       <Modal
         visible={!!contribModal}
         animationType="fade"
@@ -756,7 +757,7 @@ const styles = StyleSheet.create({
   languageContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 60,
+    paddingTop: 20,
     paddingHorizontal: theme.spacing.xl,
   },
   languageTitle: {
@@ -771,18 +772,23 @@ const styles = StyleSheet.create({
     color: theme.color.muted,
     marginTop: 8,
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 16,
   },
-  languageBtn: {
-    backgroundColor: theme.color.brand,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
+  privacyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.color.surfaceSecondary,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.color.borderStrong,
+    marginTop: theme.spacing.lg,
     borderRadius: 4,
   },
-  languageBtnText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
+  privacyBtnText: {
+    fontSize: 14,
+    color: theme.color.onSurface,
+    fontWeight: "500",
   },
   goalCard: {
     backgroundColor: theme.color.surfaceSecondary,

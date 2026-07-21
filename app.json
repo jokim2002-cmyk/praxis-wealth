@@ -14,8 +14,8 @@
                          },
                  "android":  {
                                  "adaptiveIcon":  {
-                                                      "foregroundImage":  "./assets/images/adaptive-icon.png",
-                                                      "backgroundColor":  "#000000"
+                                                      "backgroundColor":  "#3E4A35",
+                                                      "foregroundImage":  "./assets/images/adaptive-icon.png"
                                                   },
                                  "edgeToEdgeEnabled":  true,
                                  "package":  "com.emergent.aiwealthmanager.oaa4sb",

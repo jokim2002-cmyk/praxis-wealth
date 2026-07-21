@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import { useIconFonts } from "@/src/hooks/use-icon-fonts";
+import "@/src/utils/logger";
 import { runMigration } from "@/src/database/migration";
 import { resetMigrationFlag } from "@/src/database/reset";
 import { LanguageProvider } from "@/src/context/LanguageContext";
@@ -47,4 +48,6 @@ export default function RootLayout() {
     </LanguageProvider>
   );
 }
+
+
 
