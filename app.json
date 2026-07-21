@@ -2,7 +2,7 @@
     "expo":  {
                  "name":  "Praxis Wealth",
                  "slug":  "praxis-wealth",
-                 "version":  "1.0.3",
+                 "version":  "2.0.0",
                  "orientation":  "portrait",
                  "icon":  "./assets/images/icon.png",
                  "scheme":  "praxiswealth",
@@ -19,8 +19,10 @@
                                                   },
                                  "edgeToEdgeEnabled":  true,
                                  "package":  "com.emergent.aiwealthmanager.oaa4sb",
-                                 "versionCode":  3,
+                                 "versionCode":  4,
                                  "permissions":  [
+                                                     "android.permission.INTERNET",
+                                                     "android.permission.ACCESS_NETWORK_STATE",
                                                      "android.permission.RECORD_AUDIO"
                                                  ]
                              },
